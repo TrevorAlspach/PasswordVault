@@ -1,7 +1,7 @@
 # PasswordVault
 
 ## Project Description 
-Desktop App written in python which serves as a secure password vault. GUI created with PySide6 library, data stored in an sqlite3 db. (You guys feel free to change this).
+Desktop App written in python which serves as a secure password vault. GUI created with PySide6 library, data stored in an sqlite3 db.
 
 
 **TO RUN THE APP**
