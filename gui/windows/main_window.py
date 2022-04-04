@@ -20,6 +20,10 @@ class MainWindow(QMainWindow):
         addPasswordButton = QPushButton("Add Password")
         addPasswordButton.clicked.connect(self.addPassword)
         layout.addWidget(addPasswordButton)
+        refreshButton = QPushButton("Refresh")
+        refreshButton.clicked.connect(self.refresh)
+        layout.addWidget(refreshButton)
+
         widget.setLayout(layout)
         with sql.connect('db/database.db') as db:
             cur = db.cursor()
@@ -31,6 +35,10 @@ class MainWindow(QMainWindow):
     def addPassword(self):
         self.w = AddPasswordWindow()
         self.w.show()
-        # self.close()
+
+    def refresh(self):
+        self.w = MainWindow()
+        self.w.show()
+        self.close()
 
 
