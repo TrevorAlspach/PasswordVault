@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QMainWindow, QLabel, QPushButton
 from PySide6 import QtCore
 from gui.windows.main_window import MainWindow
+import sqlite3 as sql
 
 
 class LoginWindow(QMainWindow):
@@ -31,7 +32,12 @@ class LoginWindow(QMainWindow):
         return widget
 
     def checkCredentials(self):
-        if self.userInput == "password":
+        with sql.connect("db/database.db") as con:
+            cur = con.cursor()
+            cur.execute("SELECT * FROM Master")
+            temp = cur.fetchall()
+        temp = temp[0]
+        if self.userInput == temp[0]:
             self.w = MainWindow()
             self.w.show()
             self.close()
