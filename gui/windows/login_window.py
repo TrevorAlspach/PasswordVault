@@ -36,6 +36,7 @@ class LoginWindow(QMainWindow):
             cur = con.cursor()
             cur.execute("SELECT * FROM Master")
             temp = cur.fetchall()
+            cur.close()
         temp = temp[0]
         if self.userInput == temp[0]:
             self.w = MainWindow()

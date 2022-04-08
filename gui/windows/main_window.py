@@ -3,6 +3,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 import sqlite3 as sql
 from gui.windows.add_password import AddPasswordWindow
+from gui.windows.change_master import ChangeMaster
 
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -62,23 +63,32 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         layout = QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
+        # Adds master password button
+        changeMasterButton = QPushButton("Change Master Password")
+        changeMasterButton.clicked.connect(self.changeMaster)
+        layout.addWidget(changeMasterButton)
+        # Adds add password button
         addPasswordButton = QPushButton("Add Password")
         addPasswordButton.clicked.connect(self.addPassword)
         layout.addWidget(addPasswordButton)
+        # Adds refresh button
         refreshButton = QPushButton("Refresh")
         refreshButton.clicked.connect(self.refresh)
         layout.addWidget(refreshButton)
 
-        # widget.setLayout(layout)
+        # Gets all the sites, usernames, and passwords from database
         with sql.connect('db/database.db') as db:
             cur = db.cursor()
             cur.execute("SELECT * FROM Passwords")
             data = cur.fetchall()
-            print(data)
-        table = QtWidgets.QTableView()
-        model = TableModel(data)
-        table.setModel(model)
-        layout.addWidget(table)
+            cur.close()
+            #print(data)
+        # If user has already added a password, displays table
+        if len(data) > 0:
+            table = QtWidgets.QTableView()
+            model = TableModel(data)
+            table.setModel(model)
+            layout.addWidget(table)
         widget.setLayout(layout)
         return widget
 
@@ -90,3 +100,7 @@ class MainWindow(QMainWindow):
         self.w = MainWindow()
         self.w.show()
         self.close()
+
+    def changeMaster(self):
+        self.w = ChangeMaster()
+        self.w.show()

@@ -48,6 +48,7 @@ class AddPasswordWindow(QMainWindow):
                         cur.execute("INSERT INTO Passwords(Site,Username,Password) VALUES (?,?,?)",
                                     (self.site, self.user, self.passwordVal))
                         con.commit()
+                        cur.close()
                     self.close()
 
     def siteNameChange(self, text):
