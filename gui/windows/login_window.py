@@ -39,7 +39,7 @@ class LoginWindow(QMainWindow):
             cur.close()
         temp = temp[0]
         if self.userInput == temp[0]:
-            self.w = MainWindow()
+            self.w = MainWindow(False)
             self.w.show()
             self.close()
         else:

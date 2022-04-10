@@ -6,6 +6,7 @@ import db.database
 from gui.windows.main_window import MainWindow
 from gui.windows.login_window import LoginWindow
 
+
 if __name__ == "__main__":
     # run the app
     app = QtWidgets.QApplication(sys.argv)

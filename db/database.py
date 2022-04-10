@@ -17,8 +17,8 @@ def create_connection(path):
 if not os.path.isfile('db/database.db'):
     originalPassword = "password"
     conn = sqlite3.connect('db/database.db')
-    conn.execute('CREATE TABLE Passwords(Site TEXT(50), Username TEXT(50), Password TEXT(50))')
-    conn.execute('CREATE TABLE Master(password TEXT(50))')
+    conn.execute('CREATE TABLE Passwords(Site TEXT(50), Username TEXT(50), Password TEXT(50), DecodeKey TEXT(150))')
+    conn.execute('CREATE TABLE Master(password TEXT(150))')
     conn.commit()
     conn.execute('INSERT INTO Master(password) VALUES(?)', ('password',))
     conn.commit()
