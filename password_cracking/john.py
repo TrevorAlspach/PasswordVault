@@ -18,7 +18,7 @@ if sys.platform == "darwin" or sys.platform == "linux":
 
 def run_john_wordlist(hash_type, password):
     subprocess.run([path_to_john, "--format=Raw-SHA256", path_to_wordlist,
-                    path_to_password], capture_output=True)
+                    path_to_password]) #capture_output=True)
     # remove the found passwords to allow for consistent output from JTR
     # If the size of the found passwords file not zero, password was found
     if os.stat(f"{os.getcwd()}/password_cracking/john-1.9.0-jumbo-1/run/john.pot").st_size != 0:

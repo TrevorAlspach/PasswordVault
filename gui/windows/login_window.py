@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QMainWindow, QLab
 from PySide6 import QtCore
 from gui.windows.main_window import MainWindow
 import sqlite3 as sql
-
+import Crypto.Hash.SHA3_256 as SHA256
 
 class LoginWindow(QMainWindow):
     def __init__(self):
@@ -38,7 +38,7 @@ class LoginWindow(QMainWindow):
             temp = cur.fetchall()
             cur.close()
         temp = temp[0]
-        if self.userInput == temp[0]:
+        if SHA256.new(bytes(self.userInput, encoding='utf-8')).digest() == temp[0]:
             self.w = MainWindow(False)
             self.w.show()
             self.close()
@@ -50,3 +50,5 @@ class LoginWindow(QMainWindow):
     def passwordChange(self, text):
         self.userInput = text
 
+
+#Crypto.Hash.SHA3_256.new(bytes(self.userInput, encoding='utf-8')).digest()

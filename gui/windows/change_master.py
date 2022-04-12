@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QL
 from PySide6 import QtCore
 import sqlite3 as sql
 from PySide6.QtCore import Slot
-
+import Crypto.Hash.SHA3_256 as SHA256
 
 class ChangeMaster(QMainWindow):
     def __init__(self):
@@ -57,7 +57,7 @@ class ChangeMaster(QMainWindow):
             oldMaster = oldMaster[0]
             print(oldMaster)
             cur.close()
-        if self.currentMaster != oldMaster:
+        if SHA256.new(bytes(self.currentMaster, encoding='utf-8')).digest() != oldMaster:
             print("The Master password you entered does not match")
         else:
             masterMatches = True
@@ -68,7 +68,8 @@ class ChangeMaster(QMainWindow):
         if masterMatches and newMasterMatches:
             with sql.connect("db/database.db") as con:
                 cur = con.cursor()
-                cur.execute("UPDATE Master SET password = ?", (self.newMasterPassword,))
+                cur.execute("UPDATE Master SET password = ?", (SHA256.new(
+                    bytes(self.newMasterPassword, encoding='utf-8')).digest(),))
                 con.commit()
                 cur.close()
                 self.close()
