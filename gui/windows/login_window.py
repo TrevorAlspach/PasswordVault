@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QMainWindow, QLab
 from PySide6 import QtCore
 from gui.windows.main_window import MainWindow
 import sqlite3 as sql
-import Crypto.Hash.SHA3_256 as SHA256
+import Crypto.Hash.SHA256 as SHA256
 
 class LoginWindow(QMainWindow):
     def __init__(self):

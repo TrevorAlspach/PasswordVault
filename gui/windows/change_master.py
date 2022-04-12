@@ -1,8 +1,11 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, QLineEdit
+from tabnanny import check
+from PySide6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, QLineEdit, QMessageBox
 from PySide6 import QtCore
 import sqlite3 as sql
 from PySide6.QtCore import Slot
-import Crypto.Hash.SHA3_256 as SHA256
+import Crypto.Hash.SHA256 as SHA256
+import Crypto.Hash.SHA3_256 as SHA256_3
+from password_cracking.john import run_john_wordlist
 
 class ChangeMaster(QMainWindow):
     def __init__(self):
@@ -34,6 +37,9 @@ class ChangeMaster(QMainWindow):
         confirm = QPushButton("Confirm")
         confirm.clicked.connect(self.updateTable)
         layout.addWidget(confirm)
+        checkStrength = QPushButton("Check Password Strength")
+        checkStrength.clicked.connect(self.checkPasswordStrength)
+        layout.addWidget(checkStrength)
         widget.setLayout(layout)
 
         return widget
@@ -74,6 +80,18 @@ class ChangeMaster(QMainWindow):
                 cur.close()
                 self.close()
 
+    def checkPasswordStrength(self):
+        password_found = run_john_wordlist(SHA256.new(bytes(self.newMasterPassword, encoding='utf-8')).hexdigest())
+        msg = QMessageBox()
+        msg.setFixedSize(600, 600)
+        if password_found == True:
+            msg.setText("Your password is weak. It's used very commonly and easily be cracked ")
+        elif password_found == False:
+            msg.setText("Your password is strong.It is not used very commonly")
+        else:
+            return
+        msg.setWindowTitle("Password Info")
+        msg.exec_()
         # Don't know how to get this to print yet
         # layout = self.()
         # if not masterMatches:
