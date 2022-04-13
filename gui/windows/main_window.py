@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 import sqlite3 as sql
 from gui.windows.add_password import AddPasswordWindow
 from gui.windows.change_master import ChangeMaster
+from gui.windows.delete_password import DeletePasswordWindow
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import base64
@@ -92,6 +93,10 @@ class MainWindow(QMainWindow):
         addPasswordButton = QPushButton("Add Password")
         addPasswordButton.clicked.connect(self.addPassword)
         layout.addWidget(addPasswordButton)
+        # Adds delete password button
+        deleteButton = QPushButton("Delete a Password")
+        deleteButton.clicked.connect(self.deletePassword)    
+        layout.addWidget(deleteButton)  
         # Adds refresh button
         refreshButton = QPushButton("Refresh")
         refreshButton.clicked.connect(self.refresh)
@@ -126,6 +131,10 @@ class MainWindow(QMainWindow):
 
     def changeMaster(self):
         self.w = ChangeMaster()
+        self.w.show()
+        
+    def deletePassword(self):
+        self.w = DeletePasswordWindow()
         self.w.show()
 
     def showDecrypted(self, selected, deselected):
