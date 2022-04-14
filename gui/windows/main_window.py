@@ -7,6 +7,7 @@ from gui.windows.change_master import ChangeMaster
 from gui.windows.delete_password import DeletePasswordWindow
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+from cryptography.fernet import Fernet
 import base64
 
 
@@ -145,18 +146,40 @@ class MainWindow(QMainWindow):
                     temp = self.table.model()
                     with sql.connect("db/database.db") as con:
                         cur = con.cursor()
+                        cur.execute("Select * from RSA WHERE Site LIKE '%s' AND Username "
+                                     "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
+                        accountsRSA = cur.fetchall()
+                        #accountsRSA = accountsRSA[0]
+                        #print('accountsRSA: ', accountsRSA)
+                        cur.execute("Select * from Fernet WHERE Site LIKE '%s' AND Username "
+                                     "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
+                        accountsFernet = cur.fetchall()
+                        #accountsFernet = accountsFernet[0]
+                        #print('accountsFernet: ', accountsFernet)
                         cur.execute(("Select Password, DecodeKey from Passwords WHERE Site LIKE '%s' AND Username "
                                      "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1)))))
                         data = cur.fetchall()
                         data = data[0]
-                        decryptor = PKCS1_OAEP.new(RSA.import_key(data[1]))
-                        temp2 = list(data[0])
-                        temp2 = ''.join([str(item) for item in temp2])
-                        temp2 = temp2.encode()
-                        temp2 = base64.b64decode(temp2, validate=True)
+                        if len(accountsRSA) > 0:
+                            decryptor = PKCS1_OAEP.new(RSA.import_key(data[1]))
+                            temp2 = list(data[0])
+                            temp2 = ''.join([str(item) for item in temp2])
+                            temp2 = temp2.encode()
+                            temp2 = base64.b64decode(temp2, validate=True)
 
-                        decrypted = decryptor.decrypt(temp2)
-                        decrypted = decrypted.decode()
+                            decrypted = decryptor.decrypt(temp2)
+                            decrypted = decrypted.decode()
+                        elif len(accountsFernet) > 0:
+                            decryptor = data[1].encode()
+                            decryptor = Fernet(decryptor)
+                            temp2 = list(data[0])
+                            temp2 = ''.join([str(item) for item in temp2])
+                            temp2 = temp2.encode()
+                            temp2 = base64.b64decode(temp2, validate=True)
+
+                            decrypted = decryptor.decrypt(temp2)
+                            decrypted = decrypted.decode()
+
                         cur.close()
 
                     temp.setData(temp.index(i.row(), i.column()), str(decrypted))
