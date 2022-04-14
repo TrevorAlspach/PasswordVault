@@ -151,13 +151,9 @@ class MainWindow(QMainWindow):
                         cur.execute("Select * from RSA WHERE Site LIKE '%s' AND Username "
                                      "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
                         accountsRSA = cur.fetchall()
-                        #accountsRSA = accountsRSA[0]
-                        #print('accountsRSA: ', accountsRSA)
                         cur.execute("Select * from Fernet WHERE Site LIKE '%s' AND Username "
                                      "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
                         accountsFernet = cur.fetchall()
-                        #accountsFernet = accountsFernet[0]
-                        #print('accountsFernet: ', accountsFernet)
                         cur.execute("Select * from AES WHERE Site LIKE '%s' AND Username "
                                     "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
                         accountsAES = cur.fetchall()
@@ -187,8 +183,6 @@ class MainWindow(QMainWindow):
                         elif len(accountsAES) > 0:
                             accountsAES = accountsAES[0]
                             decryptor = data[1]
-                            print(data[1])
-                            #print(accountsAES)
                             decryptor = AES.new(decryptor, AES.MODE_CFB, accountsAES[2])
                             temp2 = list(data[0])
                             temp2 = ''.join([str(item) for item in temp2])
@@ -202,14 +196,11 @@ class MainWindow(QMainWindow):
                         cur.close()
 
                     temp.setData(temp.index(i.row(), i.column()), str(decrypted))
-                #except:
-                 #   self.table = QtWidgets.QTableView()
-                  #  print("in")
+
 
         for i in deselected.indexes():
             # print("Deselected Cell Location Row: {0}, Column: {1}".format(i.row(), i.column()))
             if i.column() == 2:
-                # try:
                 temp = self.table.model()
                 with sql.connect("db/database.db") as con:
                     cur = con.cursor()
