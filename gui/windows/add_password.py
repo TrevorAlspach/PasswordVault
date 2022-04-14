@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QL
 from Crypto.PublicKey import RSA
 from Crypto import Random
 from Crypto.Cipher import PKCS1_OAEP
+from os import urandom
+from Crypto.Cipher import AES
 
 
 class AddPasswordWindow(QMainWindow):
@@ -43,6 +45,7 @@ class AddPasswordWindow(QMainWindow):
         securityMethod = QComboBox()
         securityMethod.addItem('RSA')
         securityMethod.addItem('Fernet')
+        securityMethod.addItem('AES')
         # self.security = securityMethod.currentIndex()
         securityMethod.currentTextChanged.connect(self.securityChange)
         layout.addWidget(securityMethod)
@@ -60,28 +63,43 @@ class AddPasswordWindow(QMainWindow):
                 if not self.passwordVal.isspace() and self.passwordVal != "":
                     with sql.connect("db/database.db") as con:
                         cur = con.cursor()
-                        if self.security == "RSA":
-                            random_generator = Random.new().read
-                            RSAkey = RSA.generate(2048, random_generator)
-                            # print(RSAkey)
-                            self.decodeKey = RSAkey.export_key()
-                            publicKey = RSAkey.publickey()
-                            encryptor = PKCS1_OAEP.new(publicKey)
-                            self.passwordVal = encryptor.encrypt(self.passwordVal.encode())
-                            self.passwordVal = base64.b64encode(self.passwordVal)
-                            self.passwordVal = self.passwordVal.decode()
-                            cur.execute("INSERT INTO RSA(SITE,USERNAME) VALUES(?,?)", (self.site, self.user))
-                        elif self.security == "Fernet":
-                            encryptor = Fernet.generate_key()
-                            self.decodeKey = encryptor.decode()
-                            self.passwordVal = Fernet(encryptor).encrypt(self.passwordVal.encode())
-                            self.passwordVal = base64.b64encode(self.passwordVal)
-                            self.passwordVal = self.passwordVal.decode()
-                            cur.execute("INSERT INTO Fernet(Site,Username) VALUES(?,?)", (self.site, self.user))
+                        cur.execute(("Select Password, DecodeKey from Passwords WHERE Site LIKE '%s' AND Username "
+                                     "= '%s'" % (self.site, self.user)))
+                        data = cur.fetchall()
+                        if len(data) <= 0:
+                            if self.security == "RSA":
+                                random_generator = Random.new().read
+                                RSAkey = RSA.generate(2048, random_generator)
+                                # print(RSAkey)
+                                self.decodeKey = RSAkey.export_key()
+                                publicKey = RSAkey.publickey()
+                                encryptor = PKCS1_OAEP.new(publicKey)
+                                self.passwordVal = encryptor.encrypt(self.passwordVal.encode())
+                                self.passwordVal = base64.b64encode(self.passwordVal)
+                                self.passwordVal = self.passwordVal.decode()
+                                cur.execute("INSERT INTO RSA(SITE,USERNAME) VALUES(?,?)", (self.site, self.user))
+                            elif self.security == "Fernet":
+                                encryptor = Fernet.generate_key()
+                                self.decodeKey = encryptor.decode()
+                                self.passwordVal = Fernet(encryptor).encrypt(self.passwordVal.encode())
+                                self.passwordVal = base64.b64encode(self.passwordVal)
+                                self.passwordVal = self.passwordVal.decode()
+                                cur.execute("INSERT INTO Fernet(Site,Username) VALUES(?,?)", (self.site, self.user))
+                            elif self.security == 'AES':
+                                secret_key = urandom(16)
+                                self.decodeKey = secret_key
+                                iv = urandom(16)
+                                obj = AES.new(secret_key, AES.MODE_CFB, iv)
+                                self.passwordVal = obj.encrypt(self.passwordVal.encode())
+                                self.passwordVal = base64.b64encode(self.passwordVal)
+                                self.passwordVal = self.passwordVal.decode()
+                                cur.execute("INSERT INTO AES(Site,Username,IV) VALUES(?,?,?)", (self.site, self.user,iv))
 
-                        cur.execute("INSERT INTO Passwords(Site,Username,Password, DecodeKey) VALUES (?,?,?,?)",
-                                    (self.site, self.user, self.passwordVal, self.decodeKey))
-                        con.commit()
+                            cur.execute("INSERT INTO Passwords(Site,Username,Password, DecodeKey) VALUES (?,?,?,?)",
+                                        (self.site, self.user, self.passwordVal, self.decodeKey))
+                            con.commit()
+                        else:
+                            print('Those credentials already exist!')
                         cur.close()
                     self.close()
 

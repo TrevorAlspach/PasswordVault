@@ -9,6 +9,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from cryptography.fernet import Fernet
 import base64
+from os import urandom
+from Crypto.Cipher import AES
 
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -156,6 +158,9 @@ class MainWindow(QMainWindow):
                         accountsFernet = cur.fetchall()
                         #accountsFernet = accountsFernet[0]
                         #print('accountsFernet: ', accountsFernet)
+                        cur.execute("Select * from AES WHERE Site LIKE '%s' AND Username "
+                                    "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1))))
+                        accountsAES = cur.fetchall()
                         cur.execute(("Select Password, DecodeKey from Passwords WHERE Site LIKE '%s' AND Username "
                                      "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1)))))
                         data = cur.fetchall()
@@ -179,6 +184,20 @@ class MainWindow(QMainWindow):
 
                             decrypted = decryptor.decrypt(temp2)
                             decrypted = decrypted.decode()
+                        elif len(accountsAES) > 0:
+                            accountsAES = accountsAES[0]
+                            decryptor = data[1]
+                            print(data[1])
+                            #print(accountsAES)
+                            decryptor = AES.new(decryptor, AES.MODE_CFB, accountsAES[2])
+                            temp2 = list(data[0])
+                            temp2 = ''.join([str(item) for item in temp2])
+                            temp2 = temp2.encode()
+                            temp2 = base64.b64decode(temp2, validate=True)
+
+                            decrypted = decryptor.decrypt(temp2)
+                            decrypted = decrypted.decode()
+
 
                         cur.close()
 

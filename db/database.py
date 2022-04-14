@@ -21,6 +21,7 @@ if not os.path.isfile('db/database.db'):
     conn.execute('CREATE TABLE Master(password TEXT(150))')
     conn.execute('CREATE TABLE RSA (Site TEXT(50),Username TEXT(50))')
     conn.execute('CREATE TABLE Fernet (Site TEXT(50),Username TEXT(50))')
+    conn.execute('CREATE TABLE AES (Site TEXT(50),Username TEXT(50), IV TEXT(150))')
     conn.commit()
     #conn.commit()
     conn.close()
