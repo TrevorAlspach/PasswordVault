@@ -34,11 +34,14 @@ class DeletePasswordWindow(QMainWindow):
             cur = con.cursor()
             cur.execute("SELECT Site FROM Passwords")
             sites = cur.fetchall()
+            count = 1
+            options.addItem(" ")
             for site in sites:
                 thesite = str(site)
                 thesite = thesite.strip("(),'")
                 options.addItem(thesite)
             cur.close()
+        
         options.currentTextChanged.connect(self.siteChange)
         layout.addWidget(options)
         delete = QPushButton("Delete Selected Password")
