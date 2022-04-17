@@ -1,8 +1,10 @@
+from os import urandom
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QMainWindow, QLabel, QPushButton
 from PySide6 import QtCore
 from gui.windows.main_window import MainWindow
 import sqlite3 as sql
 import Crypto.Hash.SHA256 as SHA256
+import Crypto.Hash.MD5 as MD5
 
 class LoginWindow(QMainWindow):
     def __init__(self):
@@ -42,7 +44,7 @@ class LoginWindow(QMainWindow):
             cur.close()
         temp = temp[0]
         if SHA256.new(bytes(self.userInput, encoding='utf-8')).digest() == temp[0]:
-            self.w = MainWindow(False)
+            self.w = MainWindow(hash_md5(self.userInput), False)
             self.w.show()
             self.close()
         else:
@@ -98,8 +100,8 @@ class LoginWindow(QMainWindow):
         if self.newMasterPassword == self.confirmMasterPassword and self.newMasterPassword != None:
             with sql.connect("db/database.db") as con:
                 cur = con.cursor()
-                cur.execute("INSERT INTO Master(password) VALUES (?)", (SHA256.new(
-                    bytes(self.newMasterPassword, encoding='utf-8')).digest(),))
+                cur.execute("INSERT INTO Master(password, iv) VALUES (?,?)", (SHA256.new(
+                    bytes(self.newMasterPassword, encoding='utf-8')).digest(), urandom(16)))
                 con.commit()
                 cur.close()
             self.setCentralWidget(self.display_login())
@@ -111,3 +113,6 @@ class LoginWindow(QMainWindow):
 
     def confirmMasterChange(self, text):
         self.confirmMasterPassword = text
+
+def hash_md5(plaintext):
+    return MD5.new(bytes(plaintext, encoding='utf-8')).digest()
