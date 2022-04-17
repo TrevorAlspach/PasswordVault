@@ -13,7 +13,7 @@ from Crypto.Cipher import AES
 
 
 class AddPasswordWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, symmetric_key):
         super().__init__()
         self.site = ""
         self.user = ""
@@ -24,6 +24,7 @@ class AddPasswordWindow(QMainWindow):
         self.setCentralWidget(self.showAddPassWindow())
         self.security = "RSA"
         self.decodeKey = ""
+        self.symmetric_key = symmetric_key
 
     def showAddPassWindow(self):
         widget = QWidget()
@@ -66,6 +67,7 @@ class AddPasswordWindow(QMainWindow):
                         cur.execute(("Select Password, DecodeKey from Passwords WHERE Site LIKE '%s' AND Username "
                                      "= '%s'" % (self.site, self.user)))
                         data = cur.fetchall()
+                        self.symmetric_iv = cur.execute("SELECT * FROM Master").fetchone()[1]
                         if len(data) <= 0:
                             if self.security == "RSA":
                                 random_generator = Random.new().read
@@ -95,8 +97,9 @@ class AddPasswordWindow(QMainWindow):
                                 self.passwordVal = self.passwordVal.decode()
                                 cur.execute("INSERT INTO AES(Site,Username,IV) VALUES(?,?,?)", (self.site, self.user,iv))
 
+
                             cur.execute("INSERT INTO Passwords(Site,Username,Password, DecodeKey) VALUES (?,?,?,?)",
-                                        (self.site, self.user, self.passwordVal, self.decodeKey))
+                                        (self.site, self.user, self.passwordVal, self.encrypt_decode_key(self.decodeKey, self.symmetric_iv)))      
                             con.commit()
                         else:
                             print('Those credentials already exist!')
@@ -114,3 +117,7 @@ class AddPasswordWindow(QMainWindow):
 
     def securityChange(self, text):
         self.security = text
+
+    def encrypt_decode_key(self, decode_key, iv):
+        encryptor = AES.new(self.symmetric_key, AES.MODE_CFB, iv=iv)
+        return encryptor.encrypt(decode_key)

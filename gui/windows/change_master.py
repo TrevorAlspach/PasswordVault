@@ -1,14 +1,16 @@
+from os import urandom
 from tabnanny import check
 from PySide6.QtWidgets import QMainWindow, QWidget, QPushButton, QVBoxLayout, QLabel, QLineEdit, QMessageBox
 from PySide6 import QtCore
 import sqlite3 as sql
 from PySide6.QtCore import Slot
 import Crypto.Hash.SHA256 as SHA256
-import Crypto.Hash.SHA3_256 as SHA256_3
 from password_cracking.john import run_john_wordlist
+import Crypto.Hash.MD5 as MD5
+import Crypto.Cipher.AES as AES
 
 class ChangeMaster(QMainWindow):
-    def __init__(self):
+    def __init__(self, symmetric_key):
         super().__init__()
         self.currentMaster = ""
         self.newMasterPassword = ""
@@ -17,6 +19,7 @@ class ChangeMaster(QMainWindow):
         self.setFixedSize(540, 720)
         self.centralWidget = QWidget()
         self.setCentralWidget(self.showMasterPassChangeWindow())
+        self.symmetric_key = symmetric_key
 
     def showMasterPassChangeWindow(self):
         widget = QWidget()
@@ -76,26 +79,48 @@ class ChangeMaster(QMainWindow):
                 cur = con.cursor()
                 cur.execute("UPDATE Master SET password = ?", (SHA256.new(
                     bytes(self.newMasterPassword, encoding='utf-8')).digest(),))
+                #self.reencrypt_with_new_master(self.newMasterPassword, con)
+                cur.execute("DELETE FROM Passwords")
                 con.commit()
                 cur.close()
-                self.close()
+            
+            self.close()
 
     def checkPasswordStrength(self):
-        password_found = run_john_wordlist(SHA256.new(bytes(self.newMasterPassword, encoding='utf-8')).hexdigest())
+        symbols = "!@# $%^&*()-+?_=,<>/"
         msg = QMessageBox()
         msg.setFixedSize(600, 600)
+        if len(self.newMasterPassword) <= 8:
+            #not long enough
+            msg.setText(
+                "Your password is weak due to its short length. It could be brute forced easily")
+            msg.setWindowTitle("Password Info")
+            msg.exec_()
+            return
+
+        if (self.newMasterPassword.isdecimal()):
+            #Only digits
+             msg.setText(
+                "Your password is weak since it is only digits.\n Try adding some alphabetic characters/symbols")
+             msg.setWindowTitle("Password Info")
+             msg.exec_()
+             return
+        
+        if (not any(c in symbols for c in self.newMasterPassword)):
+            msg.setText(
+                "Your password is weak since it has no symbols.\n Try adding any of !@# $%^&*()-+?_=,<>/")
+            msg.setWindowTitle("Password Info")
+            msg.exec_()
+            return
+        
+        password_found = run_john_wordlist(SHA256.new(bytes(self.newMasterPassword, encoding='utf-8')).hexdigest())
+        
         if password_found == True:
-            msg.setText("Your password is weak. It's used very commonly and easily be cracked ")
+            msg.setText(
+                "While the length is good, your password is weak since \nit's used very commonly and is easily cracked via a wordlist")
         elif password_found == False:
-            msg.setText("Your password is strong.It is not used very commonly")
+            msg.setText("Adequate password length and composition.\n It is not used very commonly.\n Strong Password")
         else:
             return
         msg.setWindowTitle("Password Info")
         msg.exec_()
-        # Don't know how to get this to print yet
-        # layout = self.()
-        # if not masterMatches:
-        #     layout.addWidget(QLabel("Master Password you entered does not match the previous master password."))
-        # elif not newMasterMatches:
-        #     layout.addWidget(QLabel("New passwords do not match."))
-

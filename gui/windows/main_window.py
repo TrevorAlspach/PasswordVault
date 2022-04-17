@@ -67,7 +67,7 @@ class TableModel(QtCore.QAbstractTableModel):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, first=True):
+    def __init__(self, symmetric_key, first=True):
         super().__init__()
         self.setWindowTitle("Password Vault")
         self.setFixedSize(540, 720)
@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.showMainWindow())
         self.w = None
         self.firstTime = first
+        self.symmetric_key = symmetric_key
         # if not first:
 
     # if self.table is None:
@@ -124,16 +125,16 @@ class MainWindow(QMainWindow):
         return widget
 
     def addPassword(self):
-        self.w = AddPasswordWindow()
+        self.w = AddPasswordWindow(self.symmetric_key)
         self.w.show()
 
     def refresh(self):
-        self.w = MainWindow()
+        self.w = MainWindow(self.symmetric_key)
         self.w.show()
         self.close()
 
     def changeMaster(self):
-        self.w = ChangeMaster()
+        self.w = ChangeMaster(self.symmetric_key)
         self.w.show()
         
     def deletePassword(self):
@@ -161,8 +162,9 @@ class MainWindow(QMainWindow):
                                      "= '%s'" % (temp.data(temp.index(i.row(), 0)), temp.data(temp.index(i.row(), 1)))))
                         data = cur.fetchall()
                         data = data[0]
+                        #data[1] = self.decrypt_AES(data[1])
                         if len(accountsRSA) > 0:
-                            decryptor = PKCS1_OAEP.new(RSA.import_key(data[1]))
+                            decryptor = PKCS1_OAEP.new(RSA.import_key(self.decrypt_AES(data[1])))
                             temp2 = list(data[0])
                             temp2 = ''.join([str(item) for item in temp2])
                             temp2 = temp2.encode()
@@ -171,7 +173,7 @@ class MainWindow(QMainWindow):
                             decrypted = decryptor.decrypt(temp2)
                             decrypted = decrypted.decode()
                         elif len(accountsFernet) > 0:
-                            decryptor = data[1].encode()
+                            decryptor = self.decrypt_AES(data[1]).encode()
                             decryptor = Fernet(decryptor)
                             temp2 = list(data[0])
                             temp2 = ''.join([str(item) for item in temp2])
@@ -182,7 +184,7 @@ class MainWindow(QMainWindow):
                             decrypted = decrypted.decode()
                         elif len(accountsAES) > 0:
                             accountsAES = accountsAES[0]
-                            decryptor = data[1]
+                            decryptor = self.decrypt_AES(data[1])
                             decryptor = AES.new(decryptor, AES.MODE_CFB, accountsAES[2])
                             temp2 = list(data[0])
                             temp2 = ''.join([str(item) for item in temp2])
@@ -210,3 +212,12 @@ class MainWindow(QMainWindow):
                     data = data[0]
                     cur.close()
                 temp.setData(temp.index(i.row(), i.column()), str(data[0]))
+
+    def decrypt_AES(self, decode_key_encrypted):
+        iv = None
+        with sql.connect("db/database.db") as con:
+            cur = con.cursor()
+            iv = cur.execute("SELECT * FROM Master").fetchone()[1]
+            cur.close()
+        decryptor = AES.new(self.symmetric_key, AES.MODE_CFB, iv)
+        return decryptor.decrypt(decode_key_encrypted)
