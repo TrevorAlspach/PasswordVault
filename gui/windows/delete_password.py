@@ -34,12 +34,15 @@ class DeletePasswordWindow(QMainWindow):
             cur = con.cursor()
             cur.execute("SELECT Site FROM Passwords")
             sites = cur.fetchall()
-            count = 1
-            options.addItem(" ")
-            for site in sites:
-                thesite = str(site)
+            cur.execute("SELECT Username FROM Passwords")
+            names = cur.fetchall()
+            options.addItem("Please select a site and username")
+            for x in range(len(sites)):
+                thesite = str(sites[x])
+                theuser = str(names[x])
                 thesite = thesite.strip("(),'")
-                options.addItem(thesite)
+                theuser = theuser.strip("(),'")
+                options.addItem(thesite + " - " + theuser)
             cur.close()
         
         options.currentTextChanged.connect(self.siteChange)
@@ -55,10 +58,28 @@ class DeletePasswordWindow(QMainWindow):
     def deleteClicked(self):
         con = sql.connect("db/database.db")
         cur = con.cursor()
-        cur.execute("delete from Passwords where Site=?",(self.site,))
+        cur.execute("delete from Passwords where Site=? AND Username=?",(self.site,self.name,))
         con.commit()
         cur.close()
         self.close()
          
     def siteChange(self, text):
-        self.site = text
+        thesite = ""
+        theuser = ""
+        first = 0
+        for x in range(len(text)):
+            if(first == 1):
+                theuser = theuser + text[x]
+            if(first == 0):
+                thesite = thesite + text[x]
+                if(text[x] == " "):
+                    first = 1
+        theuser = theuser.lstrip("-")
+        theuser = theuser.strip()
+        thesite = thesite.strip()
+        print(thesite)
+        print(theuser)
+        self.site = thesite
+        self.name = theuser
+        
+        
