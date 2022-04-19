@@ -82,7 +82,8 @@ class AddPasswordWindow(QMainWindow):
                                 cur.execute("INSERT INTO RSA(SITE,USERNAME) VALUES(?,?)", (self.site, self.user))
                             elif self.security == "Fernet":
                                 encryptor = Fernet.generate_key()
-                                self.decodeKey = encryptor.decode()
+                                self.decodeKey = encryptor
+                                #self.decodeKey = encryptor
                                 self.passwordVal = Fernet(encryptor).encrypt(self.passwordVal.encode())
                                 self.passwordVal = base64.b64encode(self.passwordVal)
                                 self.passwordVal = self.passwordVal.decode()

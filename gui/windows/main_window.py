@@ -173,7 +173,8 @@ class MainWindow(QMainWindow):
                             decrypted = decryptor.decrypt(temp2)
                             decrypted = decrypted.decode()
                         elif len(accountsFernet) > 0:
-                            decryptor = self.decrypt_AES(data[1]).encode()
+                            #decryptor = self.decrypt_AES(data[1]).encode()
+                            decryptor = self.decrypt_AES(data[1])
                             decryptor = Fernet(decryptor)
                             temp2 = list(data[0])
                             temp2 = ''.join([str(item) for item in temp2])
